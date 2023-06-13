@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator erd {
+  provider = "prisma-erd-generator-markdown"
+  output   = "./ERD.md"
+}
+
+model User {
+  username String   @id
+  name     String
+  password String
+  phone    String
+  email    String   @unique
+  orders   Orders[]
+}
+
+model Admin {
+  username String   @id
+  password String
+  orders   Orders[]
+}
+
+model Orders {
+  id                 Int              @id @default(autoincrement())
+  user               User?            @relation(fields: [user_username], references: [username])
+  user_username      String?
+  unique_code        String?
+  service_type       String
+  pickup_address     String?
+  dropoff_address    String?
+  device             String?
+  device_brand       String?
+  problem_type       String?
+  problem_desc       String?
+  datetime           DateTime         @default(now())
+  order_status       String
+  admin              Admin            @relation(fields: [admin_username], references: [username])
+  admin_username     String
+  total_price        Int?
+  blobs              Blobs[]
+  order_history      Orders_History[]
+}
+
+model Orders_History {
+  id            Int         @id @default(autoincrement())
+  orders        Orders      @relation(fields: [order_id], references: [id])
+  order_id      Int
+  technician    Technician? @relation(fields: [technician_id], references: [id])
+  technician_id Int?
+  datetime      DateTime    @default(now())
+  status        String
+  description   String?
+}
+
+model Technician {
+  id             Int              @id @default(autoincrement())
+  name           String?
+  phone          String?
+  orders_history Orders_History[]
+}
+
+model Store {
+  id      Int      @id @default(autoincrement())
+  name    String
+  address String?
+  phone   String?
+}
+
+model Blobs {
+  orders   Orders @relation(fields: [id], references: [id])
+  id       Int
+  filename String @id
+}
